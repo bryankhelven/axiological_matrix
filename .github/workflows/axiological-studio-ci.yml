@@ -24,8 +24,28 @@ jobs:
         run: python -m pip install -r studio/requirements-studio.txt
       - name: Test real gold, 50 percent holdout and bundle
         run: python studio/evaluate_and_test.py
-      - name: Validate API imports
-        run: python -c 'import sys;sys.path.insert(0,"studio");from api import app;print(app.title)'
+      - name: Test API with included, excluded and empty inputs
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, 'studio')
+          from fastapi.testclient import TestClient
+          from api import app
+          client = TestClient(app)
+          response = client.post('/analyze', json={'texts': [
+              'Precisamos estudar inteligência artificial e educação.',
+              'Hoje choveu muito.',
+              ''
+          ]})
+          print('HTTP', response.status_code)
+          print(response.text[:1200])
+          assert response.status_code == 200
+          data = response.json()
+          assert len(data['predictions']) == 3
+          assert data['predictions'][2]['applicability'] is None
+          assert data['predictions'][2]['acceptance_3'] is None
+          assert client.get('/health').status_code == 200
+          PY
       - name: Upload trained model files and evaluation
         uses: actions/upload-artifact@v4
         with:
