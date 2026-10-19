@@ -1,0 +1,36 @@
+name: Axiological Studio tests
+on:
+  push:
+    branches:
+      - experiment/sentiment-contrast-eniac2026
+    paths:
+      - studio/**
+      - .github/workflows/axiological-studio-ci.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r studio/requirements-studio.txt
+      - name: Test real gold, 50 percent holdout and bundle
+        run: python studio/evaluate_and_test.py
+      - name: Validate API imports
+        run: python -c 'import sys;sys.path.insert(0,"studio");from api import app;print(app.title)'
+      - name: Upload trained model files and evaluation
+        uses: actions/upload-artifact@v4
+        with:
+          name: axiological-studio-models
+          path: |
+            studio/model_bundle/**
+            studio/metrics_50pct.json
+          retention-days: 30
