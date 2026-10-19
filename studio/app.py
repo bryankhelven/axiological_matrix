@@ -117,25 +117,39 @@ with tabs[1]:
                            file_name="axiological_studio_resultados.csv",mime="text/csv")
 
 with tabs[2]:
+    from matrix_viz import matrix_table,matrix_chart
     res=st.session_state.get("batch_output")
     if res is None:
-        st.info("Processe um CSV para obter a matriz do seu próprio conjunto de textos.")
+        st.info("Processe um CSV para gerar a matriz de seu conjunto de publicações.")
     else:
-        st.metric("Total processado",len(res))
-        bad=res[res.axiological_review_recommended==True]
-        st.caption(f"{len(bad)} registros têm avisos lexicais de domínio. Isso NÃO significa que sejam necessariamente não aplicáveis.")
-        app=res[res.axiological_applicability==1]
-        if app.empty:st.info("Não houve registros classificados como aplicáveis.")
+        total=len(res)
+        app=res.loc[res.axiological_applicability.eq(1)]
+        excluded=res.loc[res.axiological_applicability.eq(0)]
+        missing=total-len(app)-len(excluded)
+        c1,c2,c3,c4=st.columns(4)
+        c1.metric("Publicações processadas",total)
+        c2.metric("Aplicáveis previstas",f"{len(app)} ({100*len(app)/total:.1f}%)" if total else "0")
+        c3.metric("Excluídas previstas",f"{len(excluded)} ({100*len(excluded)/total:.1f}%)" if total else "0")
+        c4.metric("Sem predição",missing)
+        flagged=int(res.axiological_review_recommended.fillna(False).sum())
+        st.caption(f"{flagged} publicações apresentam alerta de revisão. Esses avisos não alteram os rótulos previstos.")
+        if app.empty:
+            st.info("O classificador não identificou publicações aplicáveis neste CSV.")
         else:
-            gran=st.radio("Matriz",["3 × 3","5 × 5"],horizontal=True)
-            n="3" if gran.startswith("3") else "5"
-            rows=[0,1,2] if n=="3" else [1,2,3,4,5]
-            cols=[-1,0,1] if n=="3" else [-2,-1,0,1,2]
-            matrix=pd.crosstab(app["axiological_intensity_"+n],app["axiological_acceptance_"+n]).reindex(index=rows,columns=cols,fill_value=0)
-            st.write("**Contagens de predições por célula**")
-            st.dataframe(matrix,use_container_width=True)
-            st.bar_chart(matrix.T)
-            st.caption("Contagens automáticas do CSV enviado, não resultados originais do artigo.")
+            left,right=st.columns(2)
+            with left:
+                gran=st.radio("Granularidade",["3 × 3","5 × 5"],horizontal=True)
+            with right:
+                measure=st.radio("Visualização",["Contagens","Percentuais"],horizontal=True)
+            size=gran[0]
+            tidy,counts=matrix_table(res,size)
+            st.altair_chart(matrix_chart(tidy,size,"count" if measure=="Contagens" else "pct"),use_container_width=True)
+            st.caption("Em cada célula, a cor representa "+("a contagem" if measure=="Contagens" else "a porcentagem dos textos classificados como aplicáveis")+
+                       ". A intensidade cresce de baixo para cima. Valores gerados sobre o CSV enviado, não sobre o corpus do artigo.")
+            with st.expander("Tabela numérica e exportação"):
+                st.dataframe(counts,use_container_width=True)
+                st.download_button("Baixar matriz em CSV",tidy.to_csv(index=False).encode("utf-8-sig"),
+                                   "axiological_matriz_"+size+".csv",mime="text/csv")
 
 with tabs[3]:
     st.subheader("Como este instrumento classifica")
