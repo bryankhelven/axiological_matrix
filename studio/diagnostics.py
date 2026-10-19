@@ -40,11 +40,23 @@ def augment_predictions(frame, models, specs):
     df["cue_education"]=pd.Series(edu,dtype="bool")
     df["tfidf_has_known_features"]=pd.Series(nonzero,dtype="bool")
     df["applicability_decision_score"]=pd.Series(margin,dtype="Float64")
-    df["review_recommended"]=((~df.cue_ai)|(~df.cue_education)|(~df.tfidf_has_known_features)) & df.text.astype(str).str.strip().ne("")
+    threshold=specs["applicability"].get("review_margin_threshold")
+    if threshold is None:
+        df["low_applicability_margin"]=False
+    else:
+        df["low_applicability_margin"]=(
+            df["applicability"].eq(1).fillna(False).astype(bool)
+            & df["applicability_decision_score"].lt(float(threshold)).fillna(False).astype(bool)
+        )
+    df["review_recommended"]=(
+        ((~df.cue_ai)|(~df.cue_education)|(~df.tfidf_has_known_features)|df.low_applicability_margin)
+        & df.text.astype(str).str.strip().ne("")
+    )
     df["review_reason"]=df.apply(
         lambda row: "; ".join([
             "sem pista lexical explícita de IA" if not row.cue_ai else "",
             "sem pista lexical explícita de educação" if not row.cue_education else "",
-            "sem características reconhecidas pelo TF-IDF" if not row.tfidf_has_known_features else ""
+            "sem características reconhecidas pelo TF-IDF" if not row.tfidf_has_known_features else "",
+            "margem abaixo do limiar OOF de revisão (não é probabilidade)" if row.low_applicability_margin else ""
         ]).strip("; ").replace("; ; ","; "),axis=1)
     return df
