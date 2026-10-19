@@ -75,6 +75,15 @@ def train(repo_root):
             "historical_cv_macro_f1":float(row["macro_f1_mean"]),
             "classes":[int(v) for v in model.classes_],
         }
+    # Only the original gold is used, and identical text hashes are kept in
+    # the same OOF fold. This is review triage, never hard rejection.
+    from quality_gate import oof_threshold
+    df_app=pd.read_csv(root/TASKS["applicability"][0]).dropna(subset=["text","applicability_score","text_hash"])
+    spec=specs["applicability"]
+    def transform(series):
+        return series.map(no_stop) if spec["input"]=="stopfiltered" else series
+    triage=oof_threshold(df_app,lambda:build_model(spec["model"]),transform)
+    spec.update(triage)
     return models,specs
 
 def analyze(texts,models,specs):
