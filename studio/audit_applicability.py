@@ -12,6 +12,8 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"studio"))
 from core import build_model, no_stop,train
 from diagnostics import cues
+from quality_gate import oof_threshold
+import numpy as np
 raw=pd.read_csv(ROOT/"data/gold/applicability_gold_final_1497.csv")
 assert len(raw)==1497 and raw.text_hash.notna().all()
 splits=GroupShuffleSplit(n_splits=1,test_size=0.5,random_state=2026)
@@ -26,8 +28,16 @@ x_test=test_df.text.astype(str)
 if spec["input"]=="stopfiltered":
     x_train=x_train.map(no_stop)
     x_test=x_test.map(no_stop)
+transform=lambda series:series.map(no_stop) if spec["input"]=="stopfiltered" else series
+train_only_threshold=oof_threshold(train_df,
+    lambda:build_model(spec["model"]),transform)
 model=build_model(spec["model"]).fit(x_train,train_df.applicability_score.astype(int))
 pred=model.predict(x_test)
+margin=model.decision_function(x_test)
+threshold=train_only_threshold["review_margin_threshold"]
+qualified=margin>=threshold
+qualified_tp=int(((test_df.applicability_score==1)&qualified).sum())
+qualified_fp=int(((test_df.applicability_score==0)&qualified).sum())
 gold=test_df.applicability_score.astype(int)
 counts=confusion_matrix(gold,pred,labels=[0,1])
 cue=[cues(text) for text in test_df.text]
@@ -62,6 +72,16 @@ report={
     "balanced_accuracy":float(balanced_accuracy_score(gold,pred)),
     "confusion_order":"rows [excluded, applicable], cols [pred excluded, pred applicable]",
     "confusion":counts.tolist(),
+    "train_only_triage":train_only_threshold,
+    "heldout_auto_qualified": {
+        "threshold":threshold,
+        "qualified_total":int(qualified.sum()),
+        "qualified_tp":qualified_tp,
+        "qualified_fp":qualified_fp,
+        "fpr_among_excluded":qualified_fp/int((test_df.applicability_score==0).sum()),
+        "recall_among_applicable":qualified_tp/int((test_df.applicability_score==1).sum()),
+        "note":"Does not change the underlying gate prediction; it indicates which positive predictions could be considered high-margin, based only on training-side OOF."
+    },
     "subgroups":groups,
     "limits":"Cues are only diagnostics, not gold; no hard lexical gate. Gold excludes only based on human code, not keyword matching. One 50% group-disjoint split, not repeated CV. There is no independent OOD evaluation across other topics.",
 }
