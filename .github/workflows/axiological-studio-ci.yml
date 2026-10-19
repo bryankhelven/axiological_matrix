@@ -65,7 +65,10 @@ jobs:
           at=AppTest.from_file('studio/app.py').run(timeout=120)
           assert not at.exception, [str(x.message) for x in at.exception]
           assert at.title[0].value == 'Axiological Studio'
-          print('STREAMLIT_INITIAL_RENDER_PASS')
+          at.text_area[0].input('É urgente ensinar como usar inteligência artificial criticamente.').run(timeout=120)
+          at.button(key='single_analyze').click().run(timeout=120)
+          assert not at.exception, [str(x.message) for x in at.exception]
+          print('STREAMLIT_SINGLE_TEXT_INFERENCE_PASS')
           PY
       - name: Upload trained model files and evaluation
         uses: actions/upload-artifact@v4
