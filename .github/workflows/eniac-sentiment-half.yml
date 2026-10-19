@@ -30,11 +30,11 @@ jobs:
         env:
           HF_HUB_DISABLE_TELEMETRY: '1'
           TOKENIZERS_PARALLELISM: 'false'
-        run: python experiments/sentiment50/evaluate_half.py --model \${{ matrix.model }}
+        run: python experiments/sentiment50/evaluate_half.py --model ${{ matrix.model }}
       - name: Upload comparison metrics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: sentiment50-\${{ matrix.model }}
+          name: sentiment50-${{ matrix.model }}
           path: experiments/sentiment50/output/
           if-no-files-found: warn
