@@ -1,0 +1,2 @@
+# For a small hosted Streamlit instance (core axiological inference only).
+-r requirements-studio.txt
