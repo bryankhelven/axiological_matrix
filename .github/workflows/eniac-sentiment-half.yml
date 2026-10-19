@@ -1,0 +1,40 @@
+name: ENIAC sentiment 50 percent diagnostic
+on:
+  push:
+    branches:
+      - experiment/sentiment-contrast-eniac2026
+    paths:
+      - experiments/sentiment50/**
+      - .github/workflows/eniac-sentiment-half.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  three-sentiment-models:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [xlm_sentiment, pt_sentiment, xlm_multilingual]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install CPU PyTorch
+        run: python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+      - name: Install benchmark dependencies
+        run: python -m pip install 'numpy==1.26.4' 'pyarrow==17.0.0' 'pandas==2.2.3' 'scikit-learn==1.5.2' 'transformers==4.45.2' 'datasets==2.21.0' 'protobuf==5.29.5' 'sentencepiece==0.2.0' 'pysentimiento==0.7.3' 'accelerate==0.34.2'
+      - name: Run 50 percent diagnostic
+        env:
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          TOKENIZERS_PARALLELISM: 'false'
+        run: python experiments/sentiment50/evaluate_half.py --model \${{ matrix.model }}
+      - name: Upload comparison metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sentiment50-\${{ matrix.model }}
+          path: experiments/sentiment50/output/
+          if-no-files-found: warn
