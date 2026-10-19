@@ -5,6 +5,7 @@ on:
       - experiment/sentiment-contrast-eniac2026
     paths:
       - studio/**
+      - .streamlit/**
       - .github/workflows/axiological-studio-browser.yml
   workflow_dispatch:
 permissions:
