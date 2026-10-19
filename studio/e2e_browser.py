@@ -63,6 +63,9 @@ def run():
             page.locator("textarea").first.fill("Sinceramente precisamos ensinar sobre inteligência artificial na educação.")
             page.get_by_role("button",name="Analisar publicação").click()
             expect(page.get_by_text("Orientação · 3 classes")).to_be_visible(timeout=60000)
+            artifacts=ROOT/"studio/e2e_artifacts"
+            artifacts.mkdir(parents=True,exist_ok=True)
+            page.screenshot(path=str(artifacts/"01_novo_texto.png"),full_page=True)
             print("E2E_NEW_TEXT_PREDICTION")
             page.get_by_role("tab",name="Analisar CSV").click()
             page.locator('input[type="file"]').first.set_input_files(str(csv_file))
@@ -78,15 +81,18 @@ def run():
             assert len(records)==5
             assert {"axiological_applicability","axiological_acceptance_3","axiological_intensity_3",
                     "axiological_review_recommended"}.issubset(records.columns)
+            page.screenshot(path=str(artifacts/"02_csv_lote.png"),full_page=True)
             print("E2E_OWN_CSV_EXPORT",len(records))
             page.get_by_role("tab",name="Matriz do meu corpus").click()
             expect(page.get_by_text("Total processado")).to_be_visible(timeout=30000)
             expect(page.get_by_text("Contagens de predições por célula")).to_be_visible(timeout=30000)
+            page.screenshot(path=str(artifacts/"03_matriz_propria.png"),full_page=True)
             print("E2E_OWN_CORPUS_MATRIX")
             page.get_by_role("tab",name="Estudo Beyond Sentiment").click()
             page.locator('input[type="file"]').last.set_input_files(str(zip_file))
             expect(page.get_by_text("Pares válidos")).to_be_visible(timeout=60000)
             expect(page.get_by_text("Consenso nos dois eixos")).to_be_visible(timeout=30000)
+            page.screenshot(path=str(artifacts/"04_estudo_r4_fixture_sintetica.png"),full_page=True)
             print("E2E_R4_UPLOAD_AND_RECONCILIATION")
             page.get_by_text("Explorar textos e conflitos").click()
             expect(page.get_by_role("button",name="Exportar recorte CSV")).to_be_visible(timeout=30000)
