@@ -23,7 +23,7 @@ def read_gold(path):
         raise ValueError("Gold should have 395 unique item IDs.")
     if df[list(required)].isna().any().any():
         raise ValueError("Missing labels or text in gold.")
-    for col, labels in (("acceptance_3", {-1, 0, 1}), ("intensity_3", {1, 2, 3})):
+    for col, labels in (("acceptance_3", {-1, 0, 1}), ("intensity_3", {0, 1, 2})):
         df[col] = pd.to_numeric(df[col]).astype(int)
         if not set(df[col]).issubset(labels):
             raise ValueError("Invalid " + col)
@@ -133,7 +133,7 @@ def candidates(df, output):
         ("acceptance_vs_negative_sentiment", (df.acceptance_3 == 1) & (df.sentiment == "negative")),
         ("rejection_vs_positive_sentiment", (df.acceptance_3 == -1) & (df.sentiment == "positive")),
         ("neutral_orientation_nonneutral_sentiment", (df.acceptance_3 == 0) & (df.sentiment != "neutral")),
-        ("high_intensity_neutral_sentiment", (df.intensity_3 == 3) & (df.sentiment == "neutral")),
+        ("high_intensity_neutral_sentiment", (df.intensity_3 == 2) & (df.sentiment == "neutral")),
     ]
     selected = []
     used = set()
