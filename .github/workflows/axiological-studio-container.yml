@@ -1,0 +1,47 @@
+name: Axiological Studio container build and smoke
+on:
+  push:
+    branches:
+      - experiment/sentiment-contrast-eniac2026
+    paths:
+      - studio/**
+      - .github/workflows/axiological-studio-container.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build core deployable container
+        run: docker build -f studio/Dockerfile.core -t axiological-studio:ci .
+      - name: Launch on dynamic cloud port
+        run: docker run -d --name axiological-studio-ci -p 18501:18501 -e PORT=18501 axiological-studio:ci
+      - name: Health and new-text UI smoke
+        run: |
+          python - <<'PY'
+          import time
+          import urllib.request
+          url='http://127.0.0.1:18501/_stcore/health'
+          for attempt in range(80):
+              try:
+                  with urllib.request.urlopen(url,timeout=3) as r:
+                      if r.status==200:
+                          print('DOCKER_HEALTH_200_DYNAMIC_PORT')
+                          break
+              except Exception:
+                  time.sleep(2)
+          else:
+              raise RuntimeError('Docker Streamlit did not become healthy')
+          with urllib.request.urlopen('http://127.0.0.1:18501/',timeout=12) as response:
+              body=response.read()
+              assert b'Streamlit' in body
+          print('DOCKER_FRONTEND_RESPONSE_OK')
+          PY
+      - name: Collect container evidence
+        if: always()
+        run: |
+          docker logs axiological-studio-ci --tail 150 || true
+          docker inspect axiological-studio-ci --format '{{.State.Status}}' || true
