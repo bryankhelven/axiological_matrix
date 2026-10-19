@@ -59,6 +59,8 @@ jobs:
       - name: Smoke test Streamlit interface
         run: |
           python - <<'PY'
+          import sys
+          sys.path.insert(0, 'studio')
           from streamlit.testing.v1 import AppTest
           at=AppTest.from_file('studio/app.py').run(timeout=120)
           assert not at.exception, [str(x.message) for x in at.exception]
