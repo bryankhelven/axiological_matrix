@@ -1,6 +1,7 @@
 """Axiological Studio: real text/CSV classification with honest domain diagnostics."""
 from pathlib import Path
 import hashlib
+from importlib.util import find_spec
 import pandas as pd
 import streamlit as st
 from core import analyze,load_bundle,train
@@ -38,10 +39,13 @@ def classify(texts,with_sentiment=False,with_emotions=False):
 
 with st.sidebar:
     st.subheader("Camadas adicionais (opcionais)")
-    sentiment=st.checkbox("Sentimentos em português",value=False,
+    optional_available=find_spec("pysentimiento") is not None
+    sentiment=st.checkbox("Sentimentos em português",value=False,disabled=not optional_available,
                           help="BERTweet-PT; modelo independente da matriz. Requer dependências e pesos adicionais.")
-    emotion=st.checkbox("Emoções multirrótulo em português",value=False,
+    emotion=st.checkbox("Emoções multirrótulo em português",value=False,disabled=not optional_available,
                         help="Modelo externo de 28 categorias; inferência pode levar alguns minutos.")
+    if not optional_available:
+        st.caption("Modelos afetivos não instalados nesta instância. Use o perfil Docker completo para ativá-los.")
     if sentiment or emotion:
         st.info("O primeiro uso pode baixar modelos grandes. Estas são inferências, não anotações humanas.")
 
