@@ -15,7 +15,7 @@ def predict(payload:Texts):
         raise HTTPException(status_code=422,detail="Text exceeds 25k characters")
     result=analyze(payload.texts,models,specs)
     return {"scope":"AI and education, Brazilian Portuguese","count":len(result),
-            "predictions":result.where(result.notna(),None).to_dict(orient="records"),
+            "predictions":result.astype(object).where(result.notna(),None).to_dict(orient="records"),
             "warning":"Experimental model outputs; not human annotations."}
 @app.get("/health")
 def health():
