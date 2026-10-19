@@ -1,0 +1,31 @@
+name: ENIAC existing annotator disagreement audit
+on:
+  push:
+    branches:
+      - experiment/sentiment-contrast-eniac2026
+    paths:
+      - experiments/axis_disagreement/**
+      - .github/workflows/eniac-axis-disagreement.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install audit dependencies
+        run: python -m pip install pandas==2.2.3 numpy==1.26.4 scikit-learn==1.5.2
+      - name: Reproduce annotation disagreement analysis
+        run: python experiments/axis_disagreement/audit_existing.py
+      - name: Upload audit output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: axiological-disagreement-audit
+          path: experiments/axis_disagreement/output/
+          if-no-files-found: warn
