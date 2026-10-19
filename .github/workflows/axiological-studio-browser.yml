@@ -31,3 +31,12 @@ jobs:
       - name: Print app logs if needed
         if: failure()
         run: tail -n 150 /tmp/studio.log || true
+
+      - name: Upload visual browser report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: axiological-studio-browser-screenshots
+          path: studio/e2e_artifacts/
+          if-no-files-found: warn
+          retention-days: 30
