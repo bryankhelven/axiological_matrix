@@ -35,6 +35,12 @@ patterns={
  "intensity_only_agrees":int((~agree_a&agree_i).sum()),
  "neither_agrees":int((~agree_a&~agree_i).sum())}
 assert sum(patterns.values())==733 and patterns["both_agree"]==395
+full=pd.read_csv(root/"data/gold/final_pairwise_annotations_1497.csv")
+app=full[full.final_applicability_score.eq(1)].copy()
+assert len(app)==734
+missing=app[app.a1_intensity_3.isna()|app.a2_intensity_3.isna()|
+            app.a1_acceptance_3.isna()|app.a2_acceptance_3.isna()]
+assert len(missing)==1 and int(missing.item_id.iloc[0])==298
 iaa=pd.read_csv(root/"data/gold/iaa_metrics_final_1497.csv")
 oof=pd.read_csv(root/"results/tables/disagreement_aware_paper_table.csv")
 regimes=["soft_dual_unweighted","consensus_only_balanced","hard_compromise_corrected"]
@@ -44,6 +50,7 @@ rows=oof[oof.regime.isin(regimes)][metrics].to_dict(orient="records")
 report={
  "paired_valid_n":733,
  "published_iaa_n":int(iaa.loc[iaa.task=="intensity_3_final_applicable","n"].iloc[0]),
+ "record_without_complete_pair":int(missing.item_id.iloc[0]),
  "consensus_3_n":395,
  "removed_relative_full_applicable_n":339,
  "axes":axis_data,
@@ -51,7 +58,7 @@ report={
  "published_corrected_oof_comparison":rows,
  "cautions":[
   "The 339 removed records are selected to lack joint consensus; their low intensity agreement is not independent evidence.",
-  "The published IAA denominator is 734 but paired valid export is 733; reconcile inclusion criteria.",
+  "IAA uses 734 applicable posts, including item 298 with no A1 axis labels. The paired valid export has 733. Treating missing as disagreement shifts published estimates slightly.",
   "Most intensity_3 disagreements are adjacent, but their correctness and discursiveness are not established.",
   "OOF is an internal heldout modeling evaluation, not external human construct validation.",
   "Never mistake soft cross entropy wins for hard-label macro-F1 or vice versa.",
