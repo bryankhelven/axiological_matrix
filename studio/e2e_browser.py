@@ -58,6 +58,13 @@ def run():
             browser=p.chromium.launch(headless=True,args=["--no-sandbox"])
             page=browser.new_page(accept_downloads=True,viewport={"width":1440,"height":900})
             page.goto(BASE,wait_until="domcontentloaded",timeout=120000)
+            if os.getenv("AXIOLOGICAL_REQUIRE_AUTH")=="1":
+                expect(page.get_by_text("Acesso experimental reservado a pesquisadores autorizados.")).to_be_visible(timeout=60000)
+                expect(page.get_by_role("tab",name="Analisar CSV")).to_have_count(0)
+                page.get_by_label("Senha de acesso").fill(os.environ["STUDIO_ACCESS_PASSWORD"])
+                page.get_by_role("button",name="Entrar").click()
+                expect(page.get_by_role("tab",name="Analisar CSV")).to_be_visible(timeout=60000)
+                print("E2E_AUTHENTICATED_GATE_PASS")
             expect(page.get_by_text("Axiological Studio").first).to_be_visible(timeout=60000)
             print("E2E_OPEN_HOME")
             page.locator("textarea").first.fill("Sinceramente precisamos ensinar sobre inteligência artificial na educação.")
