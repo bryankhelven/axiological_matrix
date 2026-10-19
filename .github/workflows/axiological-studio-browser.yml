@@ -1,0 +1,33 @@
+name: Axiological Studio end-to-end browser
+on:
+  push:
+    branches:
+      - experiment/sentiment-contrast-eniac2026
+    paths:
+      - studio/**
+      - .github/workflows/axiological-studio-browser.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chromium:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install app and browser dependencies
+        run: |
+          python -m pip install -r studio/requirements-studio.txt
+          python -m pip install 'playwright==1.48.0'
+          python -m playwright install --with-deps chromium
+      - name: Launch Streamlit
+        run: |
+          nohup streamlit run studio/app.py --server.port=8501 --server.address=127.0.0.1 --server.headless=true --server.fileWatcherType=none > /tmp/studio.log 2>&1 &
+      - name: Exercise text, CSV, own matrix, R4 upload, filtered download
+        run: python studio/e2e_browser.py
+      - name: Print app logs if needed
+        if: failure()
+        run: tail -n 150 /tmp/studio.log || true
