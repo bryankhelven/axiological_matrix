@@ -151,6 +151,18 @@ def candidates(df, output):
                     rng.sample(controls, min(12, len(controls))))
     cases = pd.DataFrame(selected, columns=["item_id", "selection_reason"]).merge(
         df, on="item_id", how="left", validate="one_to_one")
+    # Shuffle and obscure gold IDs before annotators see the review items.
+    cases = cases.sample(frac=1, random_state=SEED).reset_index(drop=True)
+    cases.insert(0, "review_key", [f"R-{i+1:03d}" for i in range(len(cases))])
+    # A and B must be filled independently, without access to gold/predictions.
+    blind = cases[["review_key", "text"]].copy()
+    for col in ("overall_affective_polarity", "main_affect_target",
+                "polarity_toward_ai_in_education", "irony_or_mixed_targets",
+                "rationale", "reviewer_id"):
+        blind[col] = ""
+    blind.to_csv(output / "BLIND_REVIEW_A.csv", index=False)
+    blind.to_csv(output / "BLIND_REVIEW_B.csv", index=False)
+
     for col in ("human_sentiment", "human_sentiment_target", "human_interpretation",
                 "annotator_1", "annotator_2", "adjudicated_decision", "review_notes"):
         cases[col] = ""
