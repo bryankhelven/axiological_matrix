@@ -4,3 +4,4 @@ transformers==4.45.2
 sentencepiece==0.2.0
 matplotlib==3.9.2
 safetensors>=0.4.5,<1
+protobuf==5.29.5
