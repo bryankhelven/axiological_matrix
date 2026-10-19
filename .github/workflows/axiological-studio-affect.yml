@@ -1,0 +1,50 @@
+name: Axiological Studio optional affect smoke test
+on:
+  push:
+    branches:
+      - experiment/sentiment-contrast-eniac2026
+    paths:
+      - studio/auxiliary.py
+      - studio/requirements-extended.txt
+      - .github/workflows/axiological-studio-affect.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-auxiliary-models:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install CPU Torch
+        run: python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+      - name: Install primary and auxiliary dependencies
+        run: |
+          python -m pip install -r studio/requirements-studio.txt
+          python -m pip install -r studio/requirements-extended.txt
+      - name: Smoke test real Portuguese texts and both external model classes
+        env:
+          TOKENIZERS_PARALLELISM: 'false'
+          HF_HUB_DISABLE_TELEMETRY: '1'
+        run: |
+          python - <<'PY'
+          import sys
+          import pandas as pd
+          sys.path.insert(0,"studio")
+          from auxiliary import annotate_auxiliary
+          corpus=pd.read_csv("data/validation/paired_axis_annotations_733.csv")
+          chosen=corpus[corpus.item_id.isin([9,710])]
+          assert len(chosen)==2
+          texts=chosen.text.tolist()+[""]
+          out=annotate_auxiliary(texts,True,True)
+          print(out.to_string(index=False))
+          assert len(out)==3
+          assert out.loc[:1,"sentiment_pt"].notna().all()
+          assert out.loc[:1,"emotion_pt_top"].notna().all()
+          assert pd.isna(out.loc[2,"sentiment_pt"])
+          assert pd.isna(out.loc[2,"emotion_pt_top"])
+          print("AUXILIARY_INFERENCE_PASS")
+          PY
