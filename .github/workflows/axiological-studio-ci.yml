@@ -24,6 +24,10 @@ jobs:
         run: python -m pip install -r studio/requirements-studio.txt
       - name: Test real gold, 50 percent holdout and bundle
         run: python studio/evaluate_and_test.py
+      - name: Audit group-disjoint original applicability on 50 percent heldout
+        run: python studio/audit_applicability.py
+      - name: Compile all Studio modules
+        run: python -m compileall -q studio
       - name: Test API with included, excluded and empty inputs
         run: |
           python - <<'PY'
@@ -44,7 +48,22 @@ jobs:
           assert len(data['predictions']) == 3
           assert data['predictions'][2]['applicability'] is None
           assert data['predictions'][2]['acceptance_3'] is None
+          assert data['predictions'][1]['review_recommended'] is True
+          assert data['predictions'][1]['cue_ai'] is False
+          assert data['predictions'][1]['cue_education'] is False
+          assert data['predictions'][1]['applicability'] in [0,1]
+          # A warning never silently overrides the model's prediction.
+          assert client.post('/analyze-extended', json={'texts':['test']}).status_code == 503
           assert client.get('/health').status_code == 200
+          PY
+      - name: Smoke test Streamlit interface
+        run: |
+          python - <<'PY'
+          from streamlit.testing.v1 import AppTest
+          at=AppTest.from_file('studio/app.py').run(timeout=120)
+          assert not at.exception, [str(x.message) for x in at.exception]
+          assert at.title[0].value == 'Axiological Studio'
+          print('STREAMLIT_INITIAL_RENDER_PASS')
           PY
       - name: Upload trained model files and evaluation
         uses: actions/upload-artifact@v4
@@ -53,4 +72,5 @@ jobs:
           path: |
             studio/model_bundle/**
             studio/metrics_50pct.json
+            studio/gate_audit_50pct.json
           retention-days: 30
