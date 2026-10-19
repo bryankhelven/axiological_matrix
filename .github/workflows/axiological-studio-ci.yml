@@ -28,6 +28,8 @@ jobs:
         run: python studio/audit_applicability.py
       - name: Compile all Studio modules
         run: python -m compileall -q studio
+      - name: Validate sanitized Work handoff and private-file rejection
+        run: python studio/test_work_r4.py
       - name: Test API with included, excluded and empty inputs
         run: |
           python - <<'PY'
