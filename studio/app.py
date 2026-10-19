@@ -49,7 +49,7 @@ with st.sidebar:
     if sentiment or emotion:
         st.info("O primeiro uso pode baixar modelos grandes. Estas são inferências, não anotações humanas.")
 
-tabs=st.tabs(["Analisar publicação","Analisar CSV","Matriz do meu corpus","Proveniência e limites"])
+tabs=st.tabs(["Analisar publicação","Analisar CSV","Matriz do meu corpus","Proveniência e limites","Estudo Beyond Sentiment"])
 with tabs[0]:
     txt=st.text_area("Texto",height=160,placeholder="Cole uma publicação sobre IA e educação...")
     if st.button("Analisar publicação",type="primary",key="single_analyze"):
@@ -144,3 +144,4 @@ with tabs[3]:
     st.write("A aplicabilidade é uma etapa de decisão anterior aos eixos. Avisos lexicais e margens não calibradas NÃO mudam a predição, e não constituem probabilidade de estar correto.")
     st.write("A avaliação 50% holdout é apenas das tarefas axiológicas. Acurácia de emoções e sentimentos no Bluesky NÃO foi medida com gold humano.")
     st.write("Opções sentimentais e emocionais usam modelos externos e precisam de instalação adicional. Interpretação de intenção autoral ou transferência para outro domínio não são suportadas.")
+\nwith tabs[4]:\n    from work_r4 import render_r4_tab\n    render_r4_tab(ROOT)\n
