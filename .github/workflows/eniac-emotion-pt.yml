@@ -1,0 +1,37 @@
+name: ENIAC Portuguese emotion round 2
+on:
+  push:
+    branches:
+      - experiment/sentiment-contrast-eniac2026
+    paths:
+      - experiments/emotion_audit/**
+      - .github/workflows/eniac-emotion-pt.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+jobs:
+  pt-multilabel-emotion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: CPU torch
+        run: python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+      - name: Other dependencies
+        run: python -m pip install 'numpy==1.26.4' 'pyarrow==17.0.0' 'pandas==2.2.3' 'scikit-learn==1.5.2' 'transformers==4.45.2' 'datasets==2.21.0' 'protobuf==5.29.5' 'sentencepiece==0.2.0' 'pysentimiento==0.7.3' 'accelerate==0.34.2'
+      - name: Predict multilabel emotions on 733 posts
+        env:
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          TOKENIZERS_PARALLELISM: 'false'
+        run: python experiments/emotion_audit/run_pt_emotion.py
+      - name: Publish outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emotion-pt-733-predictions
+          path: experiments/emotion_audit/output/
+          if-no-files-found: warn
