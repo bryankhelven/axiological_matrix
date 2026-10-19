@@ -10,6 +10,8 @@ from diagnostics import augment_predictions
 ROOT=Path(__file__).resolve().parents[1]
 BUNDLE=ROOT/"studio"/"model_bundle"
 st.set_page_config(page_title="Axiological Studio",layout="wide")
+from auth_gate import require_access
+require_access()
 st.title("Axiological Studio")
 st.caption("IA e educação | Seus textos, sua matriz | Inferência por modelos treinados")
 st.warning("Versão experimental. Predições automáticas não equivalem a anotações humanas. O filtro de aplicabilidade pode errar, sobretudo fora do domínio; observe os avisos. Não envie textos privados a uma implantação pública.")
