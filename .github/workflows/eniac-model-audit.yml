@@ -1,0 +1,45 @@
+name: ENIAC model-selection audit
+on:
+  push:
+    branches:
+      - experiment/sentiment-contrast-eniac2026
+    paths:
+      - experiments/model_audit/**
+      - .github/workflows/eniac-model-audit.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  model-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [xlm_sentiment, pt_sentiment, xlm_emotion]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install CPU PyTorch
+        run: python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+      - name: Install pinned benchmark dependencies
+        run: |
+          python -m pip install 'numpy==1.26.4' 'pandas==2.2.3' 'scikit-learn==1.5.2' 'transformers==4.45.2' 'protobuf==5.29.5' 'sentencepiece==0.2.0' 'datasets==2.21.0' 'pysentimiento==0.7.3' 'accelerate==0.34.2'
+      - name: Run audit
+        env:
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          TOKENIZERS_PARALLELISM: 'false'
+        run: |
+          python experiments/model_audit/run_audit.py --model ${{ matrix.model }}
+      - name: Upload model outputs (no paper changes)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eniac-model-audit-${{ matrix.model }}
+          path: experiments/model_audit/output/${{ matrix.model }}/
+          retention-days: 30
+          if-no-files-found: warn
