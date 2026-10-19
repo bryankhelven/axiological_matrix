@@ -1,0 +1,9 @@
+# Install IN ADDITION TO studio/requirements-studio.txt; optional large CPU weights.
+torch==2.5.1
+transformers==4.45.2
+datasets==2.21.0
+pysentimiento==0.7.3
+accelerate==0.34.2
+pyarrow==17.0.0
+protobuf==5.29.5
+sentencepiece==0.2.0
