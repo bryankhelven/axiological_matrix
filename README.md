@@ -1,6 +1,6 @@
 # An Axiological Matrix for Brazilian Portuguese Bluesky Discourse on AI in Education
 
-> **Post-acceptance supplementary experiments (October 2026):** [Beyond Sentiment: human disagreement, intensity and Portuguese sentiment models](supplementary/eniac2026/README.md). These results extend the available research artifacts without changing the accepted ENIAC paper or its human annotations. [Numerical tables](supplementary/eniac2026/RESULTS.md) · [reproducibility and limitations](supplementary/eniac2026/REPRODUCE_AND_LIMITATIONS.md).
+> **Post-acceptance supplementary experiments (October 2026):** [Beyond Sentiment: sentiment, emotion, human disagreement and evaluative intensity](supplementary/eniac2026/README.md). These results extend the available research artifacts without changing the accepted ENIAC paper or its human annotations. [Numerical tables](supplementary/eniac2026/RESULTS.md) · [reproducibility and limitations](supplementary/eniac2026/REPRODUCE_AND_LIMITATIONS.md).
 
 
 Anonymous artifact for the submitted paper **“An Axiological Matrix for Brazilian Portuguese Bluesky Discourse on AI in Education.”**
