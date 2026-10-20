@@ -1,6 +1,6 @@
 # An Axiological Matrix for Brazilian Portuguese Bluesky Discourse on AI in Education
 
-Artifact for the submitted paper **“An Axiological Matrix for Brazilian Portuguese Bluesky Discourse on AI in Education.”**
+Artifact for the paper **“An Axiological Matrix for Brazilian Portuguese Bluesky Discourse on AI in Education.”**
 
 ## Overview
 
